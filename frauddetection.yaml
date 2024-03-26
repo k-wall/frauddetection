@@ -1,0 +1,25 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+  name: fraud-detection
+spec:
+  image:  fraud-detection:latest
+  imagePullPolicy: Never
+  flinkVersion: v1_19
+  flinkConfiguration:
+    taskmanager.numberOfTaskSlots: "1"
+    kubernetes.operator.job.restart.failed: "true"
+  serviceAccount: flink
+  jobManager:
+    resource:
+      memory: "2048m"
+      cpu: 1
+  taskManager:
+    resource:
+      memory: "2048m"
+      cpu: 1
+  job:
+    jarURI: local:///opt/flink/usrlib/frauddetection.jar
+    args: ["my-cluster-kafka-bootstrap.default.svc:9092", "mygroup1"]
+    parallelism: 1
+    upgradeMode: stateless

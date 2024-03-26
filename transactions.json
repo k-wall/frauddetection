@@ -1,0 +1,13 @@
+1	{"accountId":1,"amount":10}
+2	{"accountId":2,"amount":2}
+1	{"accountId":1,"amount":10}
+1	{"accountId":1,"amount":0.99}
+1	{"accountId":1,"amount":500.01, "comment": "Fraud"}
+1	{"accountId":1,"amount":0.99}
+2	{"accountId":2,"amount":0.5}
+2	{"accountId":2,"amount":0.75}
+1	{"accountId":1,"amount":500.01, "comment": "Fraud"}
+1	{"accountId":1,"amount":500.02}
+1	{"accountId":1,"amount":500.01}
+3	{"accountId":3,"amount":0.99}
+3	{"accountId":3,"amount":500.01}
