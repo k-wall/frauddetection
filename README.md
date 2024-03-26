@@ -33,6 +33,7 @@ Checkout this repo.
    helm repo add flink-operator-repo https://downloads.apache.org/flink/flink-kubernetes-operator-1.8.0/
    helm install flink-kubernetes-operator flink-operator-repo/flink-kubernetes-operator
    ```
+5. Create a transactions topic, give it at least two partitions.
 5. Create the Flink Deployment
    ```
    kubectl apply -f frauddetection_ha.yaml
