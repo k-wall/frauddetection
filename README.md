@@ -17,6 +17,9 @@ MINIKUBE_DISK_SIZE=25GB
 Checkout this repo.
 
 
+
+
+
 1. Apply the Strimzi QuickStart
    ```
    kubectl create -f 'https://strimzi.io/install/latest?namespace=default' -n default
@@ -36,16 +39,21 @@ Checkout this repo.
    helm install flink-kubernetes-operator flink-operator-repo/flink-kubernetes-operator
    ```
 5. Create a transactions topic, give it at least two partitions.
-5. Create the Flink Deployment
+6. Build the image like this:
+   ```
+   mvn clean package && minikube image build . -t fraud-detection:latest
+   ```
+
+7. Create the Flink Deployment
    ```
    kubectl apply -f frauddetection_ha.yaml
    ```
    N.B currently this uses a hostPath volume `/tmp/flink` so create it and `chmod +w /tmp/flink`.
-6. Start a consumer of the alerts topics. 
+8. Start a consumer of the alerts topics. 
    ```
    kafka-console-consumer --bootstrap-server  ${KAFKA} --topic alerts --from-beginning --property print.timestamp=true --property print.offset=true --property print.partition=true
    ```
-7. Send some transactions to the `transactions` topic.  Some will trigger the noddy fraud rules.
+9. Send some transactions to the `transactions` topic.  Some will trigger the noddy fraud rules.
    ```
    kafka-console-producer --bootstrap-server  ${KAFKA} --topic transactions  --property parse.key=true < transactions.json
    ```
