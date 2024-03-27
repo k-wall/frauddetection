@@ -75,7 +75,10 @@ public class FraudDetectionJob {
 						public TypeInformation<Transaction> getProducedType() {
 							return TypeInformation.of(Transaction.class);
 						}
-					}).build();
+					})
+					.setProperty("commit.offsets.on.checkpoint", "true")
+					.setProperty("client.id.prefix", "fraud-source")
+					.build();
 
 
 			KafkaSink<Alert> sink = KafkaSink.<Alert>builder()

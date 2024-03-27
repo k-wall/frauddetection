@@ -21,7 +21,7 @@ spec:
   taskManager:
     resource:
       memory: "2048m"
-      cpu: 1
+      cpu: 0.5
   podTemplate:
     spec:
       containers:
@@ -31,11 +31,8 @@ spec:
               name: flink-volume
       volumes:
         - name: flink-volume
-          hostPath:
-            # directory location on host
-            path: /tmp/flink
-            # this field is optional
-            type: Directory
+          persistentVolumeClaim:
+            claimName: fraud-detection-pvc
   job:
     jarURI: local:///opt/flink/usrlib/frauddetection.jar
     args: ["my-cluster-kafka-bootstrap.default.svc:9092", "mygroup1"]
