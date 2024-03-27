@@ -58,7 +58,12 @@ Checkout this repo.
    kafka-console-producer --bootstrap-server  ${KAFKA} --topic transactions  --property parse.key=true < transactions.json
    ```
 
-Open questions:
-1. Why am I not seeing members in my consumer group???  I'm expecting to see two. `kafka-consumer-groups --bootstrap-server  minikube:32484 --group mygroup1 --describe --members`
-2. Why's all the work being done by all than one task.
+
+
+Resolved questions:
+
+Q. Why am I not seeing members in my consumer group???  I'm expecting to see two. `kafka-consumer-groups --bootstrap-server  minikube:32484 --group mygroup1 --describe --members`
+A. It is the way the Kafka Flink Source is implemented.  https://stackoverflow.com/questions/62718445/current-offset-and-lag-of-kafka-consumer-group-that-has-no-active-members
+Q. Why's all the work being done by all than one task.
+A. I had too few transactions.
 
