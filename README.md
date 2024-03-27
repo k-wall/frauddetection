@@ -26,8 +26,10 @@ Checkout this repo.
    oc apply -f kafka.yaml
    ```
 3. Kafka uses nodeport.
-   Hack /etc/hosts so that minikube resolves to the $(minikube ip)
+   Hack `/etc/hosts` so that minikube resolves to the `$(minikube ip)`
+   ```
    KAFKA=minikube:$(kubectl get service my-cluster-kafka-external-bootstrap -o=jsonpath='{.spec.ports[0].nodePort}{"\n"}')
+   ```
 4. Install the Apache Flink Operator using helm.
    ```
    helm repo add flink-operator-repo https://downloads.apache.org/flink/flink-kubernetes-operator-1.8.0/
@@ -38,6 +40,7 @@ Checkout this repo.
    ```
    kubectl apply -f frauddetection_ha.yaml
    ```
+   N.B currently this uses a hostPath volume `/tmp/flink` so create it and `chmod +w /tmp/flink`.
 6. Start a consumer of the alerts topics. 
    ```
    kafka-console-consumer --bootstrap-server  ${KAFKA} --topic alerts --from-beginning --property print.timestamp=true --property print.offset=true --property print.partition=true
