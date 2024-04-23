@@ -33,27 +33,32 @@ Checkout this repo.
    ```
    KAFKA=minikube:$(kubectl get service my-cluster-kafka-external-bootstrap -o=jsonpath='{.spec.ports[0].nodePort}{"\n"}')
    ```
-4. Install the Apache Flink Operator using helm.
+4. Install cert-manager using helm
+   ```
+   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.crds.yaml
+   helm install cert-manager jetstack/cert-manager --namespace default --version v1.14.4
+   ```
+5. Install the Apache Flink Operator using helm.
    ```
    helm repo add flink-operator-repo https://downloads.apache.org/flink/flink-kubernetes-operator-1.8.0/
    helm install flink-kubernetes-operator flink-operator-repo/flink-kubernetes-operator
    ```
-5. Create a transactions topic, give it at least two partitions.
-6. Build the image like this:
+6. Create a transactions topic, give it at least two partitions.
+7. Build the image like this:
    ```
    mvn clean package && minikube image build . -t fraud-detection:latest
    ```
 
-7. Create the Flink Deployment
+8. Create the Flink Deployment
    ```
    kubectl apply -f frauddetection_ha.yaml
    ```
    N.B currently this uses a hostPath volume `/tmp/flink` so create it and `chmod +w /tmp/flink`.
-8. Start a consumer of the alerts topics. 
+9. Start a consumer of the alerts topics. 
    ```
    kafka-console-consumer --bootstrap-server  ${KAFKA} --topic alerts --from-beginning --property print.timestamp=true --property print.offset=true --property print.partition=true
    ```
-9. Send some transactions to the `transactions` topic.  Some will trigger the noddy fraud rules.
+10. Send some transactions to the `transactions` topic.  Some will trigger the noddy fraud rules.
    ```
    kafka-console-producer --bootstrap-server  ${KAFKA} --topic transactions  --property parse.key=true < transactions.json
    ```
