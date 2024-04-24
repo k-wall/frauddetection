@@ -6,64 +6,30 @@ parallelism so that I can see things like shuffles in action.
 
 # Running
 
-You need Minikube.
+You need Minikube, helm, kubectl.
+Checkout this repo. `git clone https://github.com/k-wall/frauddetection && cd frauddetection`
 
-```
-MINIKUBE_CPUS=4
-MINIKUBE_MEMORY=16384
-MINIKUBE_DISK_SIZE=25GB
-```
-
-Checkout this repo.
-
-
-
-
-
-1. Apply the Strimzi QuickStart
+1. Setup minikube and install strimzi, cert-manager, flink operators (warning: destructive operation deletes current minikube)
    ```
-   kubectl create -f 'https://strimzi.io/install/latest?namespace=default' -n default
+   ./01-setup.sh
    ```
-2. Create a Kafka
+2. Deploy Kafka, create `transactions` topic and then deploy fraud detection Flink job
    ```
-   oc apply -f kafka.yaml
+   ./02-setup.sh
    ```
 3. Kafka uses nodeport.
    Hack `/etc/hosts` so that minikube resolves to the `$(minikube ip)`
    ```
    KAFKA=minikube:$(kubectl get service my-cluster-kafka-external-bootstrap -o=jsonpath='{.spec.ports[0].nodePort}{"\n"}')
    ```
-4. Install cert-manager using helm
-   ```
-   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.crds.yaml
-   helm install cert-manager jetstack/cert-manager --namespace default --version v1.14.4
-   ```
-5. Install the Apache Flink Operator using helm.
-   ```
-   helm repo add flink-operator-repo https://downloads.apache.org/flink/flink-kubernetes-operator-1.8.0/
-   helm install flink-kubernetes-operator flink-operator-repo/flink-kubernetes-operator
-   ```
-6. Create a transactions topic, give it at least two partitions.
-7. Build the image like this:
-   ```
-   mvn clean package && minikube image build . -t fraud-detection:latest
-   ```
-
-8. Create the Flink Deployment
-   ```
-   kubectl apply -f frauddetection_ha.yaml
-   ```
-   N.B currently this uses a hostPath volume `/tmp/flink` so create it and `chmod +w /tmp/flink`.
-9. Start a consumer of the alerts topics. 
+4. Start a consumer of the alerts topics. 
    ```
    kafka-console-consumer --bootstrap-server  ${KAFKA} --topic alerts --from-beginning --property print.timestamp=true --property print.offset=true --property print.partition=true
    ```
-10. Send some transactions to the `transactions` topic.  Some will trigger the noddy fraud rules.
+5. Send some transactions to the `transactions` topic.  Some will trigger the noddy fraud rules.
    ```
    kafka-console-producer --bootstrap-server  ${KAFKA} --topic transactions  --property parse.key=true < transactions.json
    ```
-
-
 
 Resolved questions:
 
