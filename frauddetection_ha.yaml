@@ -29,12 +29,28 @@ spec:
           volumeMounts:
             - mountPath: /flink-data
               name: flink-volume
+          env:
+            - name: TLS_CLUSTER_CA_CRT
+              valueFrom:
+                secretKeyRef:
+                  name: my-cluster-cluster-ca-cert
+                  key: ca.crt
+            - name: TLS_USER_CRT
+              valueFrom:
+                secretKeyRef:
+                  name: mtls-user
+                  key: user.crt
+            - name: TLS_USER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mtls-user
+                  key: user.key
       volumes:
         - name: flink-volume
           persistentVolumeClaim:
             claimName: fraud-detection-pvc
   job:
     jarURI: local:///opt/flink/usrlib/frauddetection.jar
-    args: ["my-cluster-kafka-bootstrap.default.svc:9092", "mygroup1"]
+    args: ["my-cluster-kafka-external2-bootstrap:9095", "mygroup1"]
     parallelism: 2
     upgradeMode: stateless

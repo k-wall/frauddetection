@@ -26,17 +26,26 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
+import org.apache.flink.connector.kafka.sink.KafkaSinkBuilder;
 import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.connector.kafka.source.KafkaSourceBuilder;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.kafka.shaded.org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.config.SslConfigs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 /**
  * Skeleton code for the datastream walkthrough
@@ -53,8 +62,20 @@ public class FraudDetectionJob {
 			String brokers = args[0];
 			String groupId = args[1];
 			LOG.info("KWDEBUG FraudDetectionJob main running {} {}", brokers, groupId);
+			Map<String, String> tlsConfig = new HashMap<>();
+			tlsConfig.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+			tlsConfig.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "PEM");
+            tlsConfig.put(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, getRequiredEnv("TLS_CLUSTER_CA_CRT"));
+			tlsConfig.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PEM");
+			tlsConfig.put(SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, getRequiredEnv("TLS_USER_CRT"));
+			tlsConfig.put(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, getRequiredEnv("TLS_USER_KEY"));
 
-			KafkaSource<Transaction> source = KafkaSource.<Transaction>builder()
+			KafkaSourceBuilder<Transaction> sourceBuilder = KafkaSource.<Transaction>builder();
+			for (Map.Entry<String, String> props : tlsConfig.entrySet()) {
+				sourceBuilder.setProperty(props.getKey(), props.getValue());
+			}
+
+			KafkaSource<Transaction> source = sourceBuilder
 					.setTopics("transactions")
 					.setBootstrapServers(brokers)
 					.setGroupId(groupId)
@@ -81,8 +102,13 @@ public class FraudDetectionJob {
 					.build();
 
 
-			KafkaSink<Alert> sink = KafkaSink.<Alert>builder()
-					.setBootstrapServers(brokers)
+			KafkaSinkBuilder<Alert> sinkBuilder = KafkaSink.<Alert>builder()
+					.setBootstrapServers(brokers);
+			for (Map.Entry<String, String> props : tlsConfig.entrySet()) {
+				sinkBuilder.setProperty(props.getKey(), props.getValue());
+			}
+
+			KafkaSink<Alert> sink = sinkBuilder
 					.setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
 					.setRecordSerializer(KafkaRecordSerializationSchema.builder()
 							.setTopic("alerts")
@@ -110,5 +136,9 @@ public class FraudDetectionJob {
 
 			env.execute("Fraud Detection");
 		}
+	}
+
+	private static String getRequiredEnv(String name) {
+        return Objects.requireNonNull(System.getenv(name), "env var " + name + " not present");
 	}
 }
